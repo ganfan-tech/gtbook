@@ -26,7 +26,7 @@ class _BookPageState extends State<BookPage> {
     if (book == null) {
       print(book);
     } else {
-      print(book.id + book.name);
+      print(book.bookId + book.name);
     }
 
     _jsonString = UniversalPlatform.isDesktopOrWeb

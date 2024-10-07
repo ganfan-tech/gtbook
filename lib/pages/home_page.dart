@@ -17,7 +17,7 @@ class _HomePageState extends State<HomePage> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   var books = [
-    Book.fromJson({"id": "231231", "name": "数学", "localPath": ""}),
+    Book.fromJson({"bookId": "231231", "name": "数学", "localPath": ""}),
     Book("Nginx"),
     Book("Web"),
     Book("iOS"),
