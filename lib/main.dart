@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:gtbook/appflowy_editor_example/appflowy_editor_example.dart';
+import 'package:gtbook/pages/home_page.dart';
+import 'package:gtbook/routes.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,6 +15,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -33,7 +35,8 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const AppflowyEditorExample(),
+      initialRoute: Routes.home,
+      getPages: Routes.getPages(),
     );
   }
 }
