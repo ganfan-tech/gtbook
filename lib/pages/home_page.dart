@@ -4,6 +4,7 @@ import 'package:gtbook/appflowy_editor_example/appflowy_editor_example.dart';
 import 'package:gtbook/components/book_card.dart';
 import 'package:gtbook/model/entity/book.dart';
 import 'package:gtbook/pages/new_book_page.dart';
+import 'package:gtbook/routes.dart';
 import 'package:universal_platform/universal_platform.dart';
 
 class HomePage extends StatefulWidget {
@@ -112,8 +113,17 @@ class _HomePageState extends State<HomePage> {
             // mainAxisSpacing: 20,
             // crossAxisSpacing: 20,
           ),
-          children: books.map((item) {
-            return BookCard(book: item);
+          children: books.map((book) {
+            return BookCard(
+              book: book,
+              onTap: () {
+                // TODO 判断文件目录是否存在，是否可用
+                Get.toNamed(
+                  Routes.book,
+                  arguments: book,
+                );
+              },
+            );
           }).toList(),
         ),
       ),

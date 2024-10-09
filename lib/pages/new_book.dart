@@ -1,7 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
-import 'package:gtbook/common/file.dart';
-import 'package:path/path.dart' as path;
 import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,17 +5,16 @@ import 'package:get/get.dart';
 import 'package:gtbook/appflowy_editor_example/pages/editor.dart';
 import 'package:gtbook/components/book_card.dart';
 import 'package:gtbook/model/entity/book.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:universal_platform/universal_platform.dart';
 
-class BookPage extends StatefulWidget {
-  const BookPage({super.key});
+class NewBookPage extends StatefulWidget {
+  const NewBookPage({super.key});
 
   @override
-  State<BookPage> createState() => _BookPageState();
+  State<NewBookPage> createState() => _NewBookPageState();
 }
 
-class _BookPageState extends State<BookPage> {
+class _NewBookPageState extends State<NewBookPage> {
   late WidgetBuilder _widgetBuilder;
   late EditorState _editorState;
   late Future<String> _jsonString;
@@ -34,8 +29,6 @@ class _BookPageState extends State<BookPage> {
       print(book.bookId + book.name);
     }
 
-    readDirectory();
-
     _jsonString = UniversalPlatform.isDesktopOrWeb
         ? rootBundle.loadString('assets/appflowy_editor_example/example.json')
         : rootBundle
@@ -47,39 +40,6 @@ class _BookPageState extends State<BookPage> {
     //         _editorState = editorState;
     //       },
     //     );
-  }
-
-  readDirectory() async {
-    // 文件路径
-    Directory d = await getApplicationSupportDirectory();
-    print(d);
-    // ~/Library/Containers/com.example.gtbook/Data/Library/Application Support/com.example.gtbook
-    // 找到book的目录
-    var bookdir = path.join(d.path, 'mybook');
-    final directory = Directory(bookdir);
-
-    // 如果文件夹不存在，创建它
-    if (!await directory.exists()) {
-      await directory.create(recursive: true); // recursive: true 确保递归创建文件夹
-      print('文件夹创建成功：$bookdir');
-    } else {
-      print('文件夹已存在：$bookdir');
-    }
-
-    // 读取 book 目录下的 gtbook.json 文件
-    final file = File(path.join(directory.path, "gtbook.json"));
-    if (await file.exists()) {
-      String contents = await file.readAsString();
-      var jsonstr = jsonDecode(contents); // 解码 JSON 字符串为 Map
-      var book = Book.fromJson(jsonstr);
-    } else {
-      // 创建文件
-      await file.create();
-      // 保存文件内容
-      var book = Book("mybook");
-      String jsonString = jsonEncode(book);
-      await file.writeAsString(jsonString);
-    }
   }
 
   @override
