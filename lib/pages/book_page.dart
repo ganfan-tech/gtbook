@@ -21,42 +21,21 @@ class BookPage extends StatefulWidget {
 }
 
 class _BookPageState extends State<BookPage> {
-  late WidgetBuilder _widgetBuilder;
-  late EditorState _editorState;
-  late Future<String> _jsonString;
+  Book _book = Get.arguments;
 
   @override
   void initState() {
     super.initState();
-    Book? book = Get.arguments;
-    if (book == null) {
-      print(book);
-    } else {
-      print(book.bookId + book.name);
-    }
 
     readDirectory();
-
-    _jsonString = UniversalPlatform.isDesktopOrWeb
-        ? rootBundle.loadString('assets/appflowy_editor_example/example.json')
-        : rootBundle
-            .loadString('assets/appflowy_editor_example/mobile_example.json');
-
-    // _widgetBuilder = (context) => Editor(
-    //       jsonString: _jsonString,
-    //       onEditorStateChange: (editorState) {
-    //         _editorState = editorState;
-    //       },
-    //     );
   }
 
   readDirectory() async {
     // 文件路径
     Directory d = await getApplicationSupportDirectory();
-    print(d);
     // ~/Library/Containers/com.example.gtbook/Data/Library/Application Support/com.example.gtbook
     // 找到book的目录
-    var bookdir = path.join(d.path, 'mybook');
+    var bookdir = path.join(d.path, _book.bookId);
     final directory = Directory(bookdir);
 
     // 如果文件夹不存在，创建它
@@ -73,14 +52,16 @@ class _BookPageState extends State<BookPage> {
       String contents = await file.readAsString();
       var jsonstr = jsonDecode(contents); // 解码 JSON 字符串为 Map
       var book = Book.fromJson(jsonstr);
-      print(book.bookId);
+      _book = book;
+      setState(() {});
     } else {
       // 创建文件
       await file.create();
-      // 保存文件内容
-      var book = Book("mybook");
+      // Book 初始化内容数据
+      _book.initContent();
       // 格式化 json 输出
-      String jsonString = const JsonEncoder.withIndent("  ").convert(book);
+      String jsonString =
+          const JsonEncoder.withIndent("  ").convert(_book.toContentJson());
 
       await file.writeAsString(jsonString);
     }
@@ -102,47 +83,9 @@ class _BookPageState extends State<BookPage> {
             width: 300,
             color: Colors.red[50],
             child: ListView(
-              children: [
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("  Chapter 01")),
-                ListTile(title: Text("  Chapter 01")),
-                ListTile(title: Text("  Chapter 01")),
-                ListTile(title: Text("  Chapter 01")),
-                ListTile(title: Text("  Chapter 01")),
-                ListTile(title: Text("  Chapter 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-                ListTile(title: Text("Section 01")),
-              ],
+              children: _book.chapters.map((i) {
+                return ListTile(title: Text(i.title));
+              }).toList(),
             ),
           ),
           Expanded(
@@ -155,6 +98,54 @@ class _BookPageState extends State<BookPage> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'Increment',
+        child: const Icon(Icons.add),
+        onPressed: () async {
+          var name = await _showInputDialog();
+          if (name == null || name.trim().isEmpty) {
+            return;
+          }
+          var newChapter = Chapter(name);
+          _book.chapters.add(newChapter);
+          setState(() {});
+        },
+      ),
     );
+  }
+
+  // 弹窗输入函数
+  Future<String?> _showInputDialog() async {
+    TextEditingController _textFieldController = TextEditingController();
+
+    // 显示对话框并获取输入
+    String? result = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Enter your new chapter title'),
+          content: TextField(
+            controller: _textFieldController,
+            decoration: const InputDecoration(),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(_textFieldController.text);
+              },
+              child: const Text('Submit'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result;
   }
 }

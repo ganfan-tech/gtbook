@@ -7,7 +7,6 @@ import 'package:get/get.dart';
 import 'package:gtbook/appflowy_editor_example/appflowy_editor_example.dart';
 import 'package:gtbook/components/book_card.dart';
 import 'package:gtbook/model/entity/book.dart';
-import 'package:gtbook/pages/new_book_page.dart';
 import 'package:gtbook/routes.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:universal_platform/universal_platform.dart';
@@ -108,13 +107,6 @@ class _HomePageState extends State<HomePage> {
     );
 
     return result;
-
-    // // 如果用户点击确定并输入了内容，更新状态
-    // if (result != null && result.isNotEmpty) {
-    //   setState(() {
-    //     _userInput = result;
-    //   });
-    // }
   }
 
   @override
