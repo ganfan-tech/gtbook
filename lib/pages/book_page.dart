@@ -23,6 +23,8 @@ class BookPage extends StatefulWidget {
 class _BookPageState extends State<BookPage> {
   Book _book = Get.arguments;
 
+  Chapter? _currentChapter = null;
+
   @override
   void initState() {
     super.initState();
@@ -84,7 +86,14 @@ class _BookPageState extends State<BookPage> {
             color: Colors.red[50],
             child: ListView(
               children: _book.chapters.map((i) {
-                return ListTile(title: Text(i.title));
+                return ListTile(
+                  title: Text(i.title),
+                  selected: i.chapterId == _currentChapter?.chapterId,
+                  onTap: () {
+                    _currentChapter = i;
+                    setState(() {});
+                  },
+                );
               }).toList(),
             ),
           ),
