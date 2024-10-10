@@ -39,6 +39,7 @@ class _NewBookPageState extends State<NewBookPage> {
             ListTile(
               title: Text("Location"),
               onTap: () async {
+                // TODO 这里有问题，每次重新加载后，点击按钮都会多打开一个窗口
                 String? selectedDirectory =
                     await FilePicker.platform.getDirectoryPath();
 

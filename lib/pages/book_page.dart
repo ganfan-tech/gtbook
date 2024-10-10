@@ -11,6 +11,7 @@ import 'package:gtbook/components/book_card.dart';
 import 'package:gtbook/model/entity/book.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:universal_platform/universal_platform.dart';
+import 'package:yaml/yaml.dart' as yaml;
 
 class BookPage extends StatefulWidget {
   const BookPage({super.key});
@@ -72,12 +73,15 @@ class _BookPageState extends State<BookPage> {
       String contents = await file.readAsString();
       var jsonstr = jsonDecode(contents); // 解码 JSON 字符串为 Map
       var book = Book.fromJson(jsonstr);
+      print(book.bookId);
     } else {
       // 创建文件
       await file.create();
       // 保存文件内容
       var book = Book("mybook");
-      String jsonString = jsonEncode(book);
+      // 格式化 json 输出
+      String jsonString = const JsonEncoder.withIndent("  ").convert(book);
+
       await file.writeAsString(jsonString);
     }
   }

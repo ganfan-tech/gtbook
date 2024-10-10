@@ -10,8 +10,8 @@ class Book {
   /// 作者
   String? author;
 
-  /// 本地路径
-  String? localPath;
+  /// book 在本地保存的文件夹名称
+  String? bookdir;
 
   late List<Chapter> chapters;
 
@@ -23,12 +23,14 @@ class Book {
 
   Book(
     this.name,
-  ) : bookId = const Uuid().v4();
+  )   : bookId = const Uuid().v4(),
+        createdTime = BigInt.from(DateTime.now().microsecondsSinceEpoch),
+        updatedTime = BigInt.from(DateTime.now().microsecondsSinceEpoch);
 
   Book.fromJson(Map<String, dynamic> json) {
     bookId = json['bookId'];
     name = json['name'];
-    localPath = json['localPath'];
+    bookdir = json['bookdir'];
 
     chapters = [];
     if (json['chapters'] != null) {
@@ -42,7 +44,7 @@ class Book {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['bookId'] = bookId;
     data['name'] = name;
-    data['localPath'] = localPath;
+    data['bookdir'] = bookdir;
     return data;
   }
 }
