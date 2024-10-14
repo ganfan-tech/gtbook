@@ -139,14 +139,13 @@ class _BookPageState extends State<BookPage> {
         children: [
           Container(
             width: 300,
-            color: Colors.red[50],
             child: ListView(
               children: _book.chapters.map((i) {
                 return ListTile(
                   title: Text(i.title),
                   selected: i.chapterId == _currentChapter?.chapterId,
                   selectedColor: Colors.red,
-                  selectedTileColor: Colors.redAccent,
+                  selectedTileColor: Colors.red[50],
                   onTap: () {
                     switchCurrentChapter(i);
                   },
@@ -162,13 +161,11 @@ class _BookPageState extends State<BookPage> {
                       maintainBottomViewPadding: true,
                       child: Column(
                         children: [
-                          Text("Hello World"),
                           Expanded(
-                            child: Container(child: _widgetBuilder!(context)),
+                            child: _widgetBuilder!(context),
                           ),
                         ],
                       ),
-                      // child: _widgetBuilder(context),
                     ),
                   ),
           ),

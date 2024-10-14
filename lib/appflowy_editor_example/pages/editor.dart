@@ -78,7 +78,7 @@ class _EditorState extends State<Editor> {
     return Stack(
       children: [
         ColoredBox(
-          color: Colors.white,
+          color: Colors.grey[200]!,
           child: FutureBuilder<String>(
             future: widget.jsonString,
             builder: (context, snapshot) {

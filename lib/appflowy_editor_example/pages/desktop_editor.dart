@@ -93,14 +93,14 @@ class _DesktopEditorState extends State<DesktopEditor> {
           editorStyle: editorStyle,
           enableAutoComplete: true,
           autoCompleteTextProvider: _buildAutoCompleteTextProvider,
-          header: Padding(
-            padding: const EdgeInsets.only(bottom: 10.0),
-            child: Image.asset(
-              'assets/appflowy_editor_example/images/header.png',
-              fit: BoxFit.fitWidth,
-              height: 150,
-            ),
-          ),
+          // header: Padding(
+          //   padding: const EdgeInsets.only(bottom: 10.0),
+          //   child: Image.asset(
+          //     'assets/appflowy_editor_example/images/header.png',
+          //     fit: BoxFit.fitWidth,
+          //     height: 150,
+          //   ),
+          // ),
           footer: const SizedBox(
             height: 100,
           ),
