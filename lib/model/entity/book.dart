@@ -84,23 +84,18 @@ class Chapter {
   /// booId，所属book的ID
   late String bookId;
 
-  /// 文件名，对应文件系统里的文件
-  /// 由系统管理，不能修改
-  late String filename;
-
   /// 内容
   late String content;
 
   /// 子章节
   late List<Chapter> chapters;
 
-  Chapter(this.title) : chapterId = const Uuid().v4();
+  Chapter(this.bookId, this.title) : chapterId = const Uuid().v4();
 
   Chapter.fromJson(Map<String, dynamic> json) {
     chapterId = json['chapterId'];
     title = json['title'];
     bookId = json['bookId'];
-    filename = json['filename'];
 
     var now = DateTime.now();
     var nowStr = DateFormat("y-M-d h:m:s").format(now);

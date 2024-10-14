@@ -25,6 +25,10 @@ class _BookPageState extends State<BookPage> {
 
   Chapter? _currentChapter = null;
 
+  Directory? _thisBookDir = null;
+
+  File? _thisBookIndexFile = null;
+
   @override
   void initState() {
     super.initState();
@@ -32,7 +36,7 @@ class _BookPageState extends State<BookPage> {
     readDirectory();
   }
 
-  readDirectory() async {
+  void readDirectory() async {
     // 文件路径
     Directory d = await getApplicationSupportDirectory();
     // ~/Library/Containers/com.example.gtbook/Data/Library/Application Support/com.example.gtbook
@@ -47,6 +51,8 @@ class _BookPageState extends State<BookPage> {
     } else {
       print('文件夹已存在：$bookdir');
     }
+
+    _thisBookDir = directory;
 
     // 读取 book 目录下的 gtbook.json 文件
     final file = File(path.join(directory.path, "gtbook.json"));
@@ -67,6 +73,30 @@ class _BookPageState extends State<BookPage> {
 
       await file.writeAsString(jsonString);
     }
+    _thisBookIndexFile = file;
+  }
+
+  void createChapter(String title) {
+    var newChapter = Chapter(_book.bookId, title);
+    _book.chapters.add(newChapter);
+    _currentChapter = newChapter;
+    setState(() {});
+
+    // 创建 chapter file
+    createChapterFile(newChapter);
+
+    // 更新 gtbook.json 文件
+    String jsonString =
+        const JsonEncoder.withIndent("  ").convert(_book.toContentJson());
+
+    _thisBookIndexFile!.writeAsString(jsonString);
+  }
+
+  void createChapterFile(Chapter newChapter) async {
+    final file =
+        File(path.join(_thisBookDir!.path, "${newChapter.chapterId}.md"));
+    // 创建文件
+    await file.create();
   }
 
   @override
@@ -89,6 +119,8 @@ class _BookPageState extends State<BookPage> {
                 return ListTile(
                   title: Text(i.title),
                   selected: i.chapterId == _currentChapter?.chapterId,
+                  selectedColor: Colors.red,
+                  selectedTileColor: Colors.redAccent,
                   onTap: () {
                     _currentChapter = i;
                     setState(() {});
@@ -98,12 +130,23 @@ class _BookPageState extends State<BookPage> {
             ),
           ),
           Expanded(
-            child: Container(
-                // child: SafeArea(
-                //   maintainBottomViewPadding: true,
-                //   // child: _widgetBuilder(context),
-                // ),
-                ),
+            child: _currentChapter == null
+                ? Container()
+                : Container(
+                    child: const SafeArea(
+                      maintainBottomViewPadding: true,
+                      child: Column(
+                        children: [
+                          Text("Hello World"),
+                          Text("Hello World"),
+                          Text("Hello World"),
+                          Text("Hello World"),
+                          Text("Hello World"),
+                        ],
+                      ),
+                      // child: _widgetBuilder(context),
+                    ),
+                  ),
           ),
         ],
       ),
@@ -111,13 +154,11 @@ class _BookPageState extends State<BookPage> {
         tooltip: 'Increment',
         child: const Icon(Icons.add),
         onPressed: () async {
-          var name = await _showInputDialog();
-          if (name == null || name.trim().isEmpty) {
+          var title = await _showInputDialog();
+          if (title == null || title.trim().isEmpty) {
             return;
           }
-          var newChapter = Chapter(name);
-          _book.chapters.add(newChapter);
-          setState(() {});
+          createChapter(title);
         },
       ),
     );
