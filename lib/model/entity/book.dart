@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'package:path/path.dart' as path;
+
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
 
@@ -85,7 +88,7 @@ class Chapter {
   late String bookId;
 
   /// 内容
-  late String content;
+  late Future<String> content;
 
   /// 子章节
   late List<Chapter> chapters;
@@ -108,6 +111,25 @@ class Chapter {
         chapters.add(Chapter.fromJson(v));
       });
     }
+  }
+
+  Future<void> loadContentFromFile(String bookDirPath) async {
+    final file = File(path.join(bookDirPath, "$chapterId.md"));
+    if (!await file.exists()) {
+      // 创建文件
+      await file.create();
+    }
+    content = file.readAsString();
+  }
+
+  void syncContentToFile(String bookDirPath) async {
+    final file = File(path.join(bookDirPath, "$chapterId.md"));
+    if (!await file.exists()) {
+      // 创建文件
+      await file.create();
+    }
+
+    await file.writeAsString(await content, flush: true);
   }
 
   Map<String, dynamic> toJson() {

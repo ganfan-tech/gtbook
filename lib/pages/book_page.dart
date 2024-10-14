@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:gtbook/common/file.dart';
@@ -29,14 +30,16 @@ class _BookPageState extends State<BookPage> {
 
   File? _thisBookIndexFile = null;
 
+  WidgetBuilder? _widgetBuilder;
+
   @override
   void initState() {
     super.initState();
 
-    readDirectory();
+    _loadBookInfo();
   }
 
-  void readDirectory() async {
+  void _loadBookInfo() async {
     // 文件路径
     Directory d = await getApplicationSupportDirectory();
     // ~/Library/Containers/com.example.gtbook/Data/Library/Application Support/com.example.gtbook
@@ -76,27 +79,50 @@ class _BookPageState extends State<BookPage> {
     _thisBookIndexFile = file;
   }
 
-  void createChapter(String title) {
-    var newChapter = Chapter(_book.bookId, title);
-    _book.chapters.add(newChapter);
-    _currentChapter = newChapter;
-    setState(() {});
-
-    // 创建 chapter file
-    createChapterFile(newChapter);
-
-    // 更新 gtbook.json 文件
+  void _syncBookInfo() {
     String jsonString =
         const JsonEncoder.withIndent("  ").convert(_book.toContentJson());
 
     _thisBookIndexFile!.writeAsString(jsonString);
   }
 
-  void createChapterFile(Chapter newChapter) async {
-    final file =
-        File(path.join(_thisBookDir!.path, "${newChapter.chapterId}.md"));
-    // 创建文件
-    await file.create();
+  void createChapter(String title) {
+    var newChapter = Chapter(_book.bookId, title);
+    newChapter.content = Future<String>.value("# $title\n");
+    _book.chapters.add(newChapter);
+
+    _currentChapter = newChapter;
+    _loadEditor();
+
+    // 创建 chapter file
+    newChapter.syncContentToFile(_thisBookDir!.path);
+
+    // 更新 gtbook.json 文件
+    _syncBookInfo();
+  }
+
+  void switchCurrentChapter(Chapter chapter) async {
+    _currentChapter = chapter;
+    await _currentChapter!.loadContentFromFile(_thisBookDir!.path);
+    _loadEditor();
+    setState(() {});
+  }
+
+  Future<void> _loadEditor() async {
+    final completer = Completer<void>();
+    var jsonString =
+        jsonEncode(markdownToDocument(await _currentChapter!.content).toJson());
+    _widgetBuilder = (context) => Editor(
+          jsonString: Future<String>.value(jsonString),
+          onEditorStateChange: (editorState) {
+            // _editorState = editorState;
+          },
+        );
+    setState(() {});
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      completer.complete();
+    });
+    return completer.future;
   }
 
   @override
@@ -122,26 +148,24 @@ class _BookPageState extends State<BookPage> {
                   selectedColor: Colors.red,
                   selectedTileColor: Colors.redAccent,
                   onTap: () {
-                    _currentChapter = i;
-                    setState(() {});
+                    switchCurrentChapter(i);
                   },
                 );
               }).toList(),
             ),
           ),
           Expanded(
-            child: _currentChapter == null
+            child: _currentChapter == null || _widgetBuilder == null
                 ? Container()
                 : Container(
-                    child: const SafeArea(
+                    child: SafeArea(
                       maintainBottomViewPadding: true,
                       child: Column(
                         children: [
                           Text("Hello World"),
-                          Text("Hello World"),
-                          Text("Hello World"),
-                          Text("Hello World"),
-                          Text("Hello World"),
+                          Expanded(
+                            child: Container(child: _widgetBuilder!(context)),
+                          ),
                         ],
                       ),
                       // child: _widgetBuilder(context),
