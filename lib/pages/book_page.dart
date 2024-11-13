@@ -26,11 +26,11 @@ class _BookPageState extends State<BookPage> {
 
   Chapter? _currentChapter = null;
 
-  Directory? _thisBookDir = null;
-
   File? _thisBookIndexFile = null;
 
   WidgetBuilder? _widgetBuilder;
+
+  EditorState? _editorState;
 
   @override
   void initState() {
@@ -44,39 +44,20 @@ class _BookPageState extends State<BookPage> {
     Directory d = await getApplicationSupportDirectory();
     // ~/Library/Containers/com.example.gtbook/Data/Library/Application Support/com.example.gtbook
     // 找到book的目录
-    var bookdir = path.join(d.path, _book.bookId);
-    final directory = Directory(bookdir);
+    var bookpath = path.join(d.path, _book.bookId);
+    final directory = Directory(bookpath);
 
     // 如果文件夹不存在，创建它
     if (!await directory.exists()) {
       await directory.create(recursive: true); // recursive: true 确保递归创建文件夹
-      print('文件夹创建成功：$bookdir');
+      print('文件夹创建成功：$bookpath');
     } else {
-      print('文件夹已存在：$bookdir');
+      print('文件夹已存在：$bookpath');
     }
 
-    _thisBookDir = directory;
-
-    // 读取 book 目录下的 gtbook.json 文件
-    final file = File(path.join(directory.path, "gtbook.json"));
-    if (await file.exists()) {
-      String contents = await file.readAsString();
-      var jsonstr = jsonDecode(contents); // 解码 JSON 字符串为 Map
-      var book = Book.fromJson(jsonstr);
-      _book = book;
-      setState(() {});
-    } else {
-      // 创建文件
-      await file.create();
-      // Book 初始化内容数据
-      _book.initContent();
-      // 格式化 json 输出
-      String jsonString =
-          const JsonEncoder.withIndent("  ").convert(_book.toContentJson());
-
-      await file.writeAsString(jsonString);
-    }
-    _thisBookIndexFile = file;
+    _book.bookdir = directory;
+    _book.loadBookIndexFile();
+    setState(() {});
   }
 
   void _syncBookInfo() {
@@ -95,7 +76,7 @@ class _BookPageState extends State<BookPage> {
     _loadEditor();
 
     // 创建 chapter file
-    newChapter.syncContentToFile(_thisBookDir!.path);
+    newChapter.syncContentToFile();
 
     // 更新 gtbook.json 文件
     _syncBookInfo();
@@ -103,21 +84,32 @@ class _BookPageState extends State<BookPage> {
 
   void switchCurrentChapter(Chapter chapter) async {
     _currentChapter = chapter;
-    await _currentChapter!.loadContentFromFile(_thisBookDir!.path);
+    await _currentChapter!.loadContentFromFile();
     _loadEditor();
     setState(() {});
   }
 
   Future<void> _loadEditor() async {
     final completer = Completer<void>();
-    var jsonString =
-        jsonEncode(markdownToDocument(await _currentChapter!.content).toJson());
-    _widgetBuilder = (context) => Editor(
-          jsonString: Future<String>.value(jsonString),
-          onEditorStateChange: (editorState) {
-            // _editorState = editorState;
-          },
-        );
+
+    var jsonMap = markdownToDocument(await _currentChapter!.content).toJson();
+    var jsonString = jsonEncode(jsonMap);
+
+    wb(context) {
+      return Editor(
+        jsonString: Future<String>.value(jsonString),
+        onEditorStateChange: (editorState) {
+          _editorState = editorState;
+          var md = documentToMarkdown(editorState.document);
+          _currentChapter!.content = Future.value(md);
+          _currentChapter!.syncContentToFile();
+          // 更新本地文件内容
+        },
+      );
+    }
+
+    _widgetBuilder = wb;
+
     setState(() {});
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       completer.complete();

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:path/path.dart' as path;
+import 'dart:convert';
 
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
@@ -14,13 +15,16 @@ class Book {
   /// 作者
   String? author;
 
-  late List<Chapter> chapters;
-
   /// 创建时间
   String? createdTime;
 
   /// 更新时间
   String? updatedTime;
+
+  /// 书的章节
+  late List<Chapter> chapters;
+
+  late Directory bookdir;
 
   Book(
     this.name,
@@ -31,16 +35,11 @@ class Book {
     updatedTime = nowStr;
   }
 
-  Book.fromJson(Map<String, dynamic> json) {
+  Book.basicFromJson(Map<String, dynamic> json) {
     bookId = json['bookId'];
     name = json['name'];
 
     chapters = [];
-    if (json['chapters'] != null) {
-      json['chapters'].forEach((v) {
-        chapters.add(Chapter.fromJson(v));
-      });
-    }
   }
 
   Map<String, dynamic> toJson() {
@@ -69,6 +68,41 @@ class Book {
 
     return data;
   }
+
+  loadBookIndexFile() async {
+    // 读取 book 目录下的 gtbook.json 文件
+    final file = File(path.join(bookdir.path, "gtbook.json"));
+    if (await file.exists()) {
+      String contents = await file.readAsString();
+      var json = jsonDecode(contents); // 解码 JSON 字符串为 Map
+
+      chapters = [];
+      if (json['chapters'] != null) {
+        json['chapters'].forEach((v) {
+          chapters.add(Chapter.fromJson(v, this));
+        });
+      }
+    } else {
+      // 创建文件
+      await file.create();
+      // Book 初始化内容数据
+      initContent();
+      // 格式化 json 输出
+      String jsonString =
+          const JsonEncoder.withIndent("  ").convert(toContentJson());
+
+      await file.writeAsString(jsonString);
+    }
+  }
+
+  syncBookIndexFile() async {
+    String jsonString =
+        const JsonEncoder.withIndent("  ").convert(toContentJson());
+
+    final file = File(path.join(bookdir.path, "gtbook.json"));
+
+    file.writeAsString(jsonString);
+  }
 }
 
 class Chapter {
@@ -87,6 +121,8 @@ class Chapter {
   /// booId，所属book的ID
   late String bookId;
 
+  late Book _book;
+
   /// 内容
   late Future<String> content;
 
@@ -95,7 +131,9 @@ class Chapter {
 
   Chapter(this.bookId, this.title) : chapterId = const Uuid().v4();
 
-  Chapter.fromJson(Map<String, dynamic> json) {
+  Chapter.fromJson(Map<String, dynamic> json, Book book) {
+    _book = book;
+
     chapterId = json['chapterId'];
     title = json['title'];
     bookId = json['bookId'];
@@ -108,13 +146,13 @@ class Chapter {
     chapters = [];
     if (json['chapters'] != null) {
       json['chapters'].forEach((v) {
-        chapters.add(Chapter.fromJson(v));
+        chapters.add(Chapter.fromJson(v, book));
       });
     }
   }
 
-  Future<void> loadContentFromFile(String bookDirPath) async {
-    final file = File(path.join(bookDirPath, "$chapterId.md"));
+  Future<void> loadContentFromFile() async {
+    final file = File(path.join(_book.bookdir.path, "$chapterId.md"));
     if (!await file.exists()) {
       // 创建文件
       await file.create();
@@ -122,8 +160,8 @@ class Chapter {
     content = file.readAsString();
   }
 
-  void syncContentToFile(String bookDirPath) async {
-    final file = File(path.join(bookDirPath, "$chapterId.md"));
+  void syncContentToFile() async {
+    final file = File(path.join(_book.bookdir.path, "$chapterId.md"));
     if (!await file.exists()) {
       // 创建文件
       await file.create();

@@ -15,7 +15,7 @@ class AppData {
     books = [];
     if (json['books'] != null) {
       json['books'].forEach((v) {
-        books.add(Book.fromJson(v));
+        books.add(Book.basicFromJson(v));
       });
     }
   }
